@@ -3,7 +3,7 @@ using Xunit;
 
 namespace DemoCiCd.Test
 {
-    public class UnitTest1
+    public class DemoTest
     {
         [Fact]
         public void Test1()
