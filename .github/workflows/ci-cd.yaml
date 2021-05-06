@@ -4,6 +4,9 @@ on:
   push:
     branches:
      - master
+
+env:
+ DOTNET_VERSION: '5.0.x'
  
 jobs:
   build:
@@ -15,7 +18,16 @@ jobs:
       - name: Setup .NET5 👯‍♂️
         uses: actions/setup-dotnet@v1
         with:
-          dotnet-version: '5.0.x'
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Start SQL Server (for Integration Test)
+        run: |
+          docker run -d -e 'ACCEPT_EULA=Y' -e 'SA_PASSWORD=Pass~w0r8' -e 'MSSQL_PID=Express' -p 1433:1433 -d mcr.microsoft.com/mssql/server:latest
+
+      - name: Sleep for 5 secs till Sql Server started 💤
+         uses: jakejarvis/wait-action@master
+         with:
+          time: '5s'
 
       - name: Restore dependencies 🔻
         run: dotnet restore
@@ -23,7 +35,14 @@ jobs:
       - name: Build App 🌇
         run: dotnet build -c Release --no-restore
 
-      - name: Run unit Tests ✔️
-        run: dotnet test -c Release  --no-build
+      - name: Run automated tests ✔️
+        env: 
+          ConnectionStrings__DemoDbConnection: Server=localhost;Database=DemoCiCdTest;User=sa;Password=Pass~w0r8
+        run: dotnet test -c Release --no-build
+
+      - name: Publish App 🚢
+        run: dotnet publish -c Release -o ./out
+
+     
       
 
